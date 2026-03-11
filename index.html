@@ -7,6 +7,11 @@
 <title>SaveWise – Savings Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  window._firebase = { initializeApp, getFirestore, doc, setDoc, getDoc };
+</script>
 <style>
 :root {
   --bg:#0a0e1a; --bg2:#0f1525; --card:#131929; --card2:#1a2035;
@@ -163,7 +168,13 @@ canvas.ring{display:block}
     <div class="logo">💚 SaveWise</div>
     <div class="logo-sub">Savings Mode Tracker</div>
   </div>
-  <div class="top-nav" id="topNav"></div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="top-nav" id="topNav"></div>
+    <button onclick="openSyncSettings()" title="Sync Settings" style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:6px 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:80px">
+      <span style="font-size:14px">☁️</span>
+      <span id="syncStatus" style="font-size:9px;font-weight:700;color:#64748b">Not connected</span>
+    </button>
+  </div>
 </div>
 
 <div class="main" id="main"></div>
@@ -261,6 +272,7 @@ const TABS = [
 // RENDER ENGINE
 // ════════════════════════════════════════════════════════
 function render() {
+  if(typeof saveData === 'function') saveData();
   renderNav();
   const main = document.getElementById('main');
   const pages = {
@@ -1462,9 +1474,131 @@ function addMonthLog(){
 }
 
 // ════════════════════════════════════════════════════════
+// PERSIST — Google Sheets sync + localStorage fallback
+// ════════════════════════════════════════════════════════
+const SAVE_KEY = 'savewise_data';
+const GS_URL_KEY = 'savewise_gs_url';
+let syncTimer = null;
+
+function getPayload() {
+  return { incomes:S.incomes, savings:S.savings, monthlyLog:S.monthlyLog, goals:S.goals, projMonths:S.projMonths };
+}
+
+function applyData(d) {
+  if(d.incomes)    S.incomes    = d.incomes;
+  if(d.savings)    S.savings    = d.savings;
+  if(d.monthlyLog) S.monthlyLog = d.monthlyLog;
+  if(d.goals)      S.goals      = d.goals;
+  if(d.projMonths) S.projMonths = d.projMonths;
+}
+
+function getScriptUrl() {
+  return localStorage.getItem(GS_URL_KEY) || '';
+}
+
+function saveData() {
+  // Always save to localStorage instantly
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(getPayload())); } catch(e) {}
+  // Debounce cloud sync — 2s after last change
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(syncToSheets, 2000);
+}
+
+async function syncToSheets() {
+  const url = getScriptUrl();
+  if(!url) return;
+  setSyncStatus('syncing');
+  try {
+    const payload = JSON.stringify(getPayload());
+    await fetch(`${url}?action=save&data=${encodeURIComponent(payload)}`);
+    setSyncStatus('saved');
+  } catch(e) { console.warn('Sync error', e); setSyncStatus('error'); }
+}
+
+async function loadFromSheets() {
+  const url = getScriptUrl();
+  if(!url) { setSyncStatus('nourl'); return false; }
+  setSyncStatus('loading');
+  try {
+    const res = await fetch(`${url}?action=load`);
+    const json = await res.json();
+    if(json.ok && json.data) {
+      // settings sheet returns [{key,value}] — extract projMonths
+      if(Array.isArray(json.data.projMonths)) {
+        const pm = json.data.projMonths.find(r=>r.key==='projMonths');
+        json.data.projMonths = pm ? Number(pm.value) : 24;
+      }
+      applyData(json.data);
+      try { localStorage.setItem(SAVE_KEY, JSON.stringify(getPayload())); } catch(e) {}
+      setSyncStatus('saved');
+      return true;
+    }
+    setSyncStatus('saved');
+    return false;
+  } catch(e) { console.warn('Load error', e); setSyncStatus('error'); return false; }
+}
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(raw) applyData(JSON.parse(raw));
+  } catch(e) {}
+}
+
+function setSyncStatus(status) {
+  const el = document.getElementById('syncStatus');
+  if(!el) return;
+  const states = {
+    saved:   { text:'✅ Synced',         color:'#22d3a5' },
+    syncing: { text:'🔄 Syncing...',     color:'#f59e0b' },
+    loading: { text:'🔄 Loading...',     color:'#6366f1' },
+    error:   { text:'⚠️ Sync failed',   color:'#fb7185' },
+    nourl:   { text:'☁️ Not connected', color:'#64748b' },
+  };
+  const s = states[status] || states.nourl;
+  el.textContent = s.text;
+  el.style.color = s.color;
+}
+
+function openSyncSettings() {
+  const current = getScriptUrl();
+  const input = prompt(
+    '📊 Paste your Google Apps Script Web App URL here:\n\n' +
+    'Get it from: Apps Script → Deploy → Manage deployments → Copy Web App URL\n\n' +
+    'Leave blank to disconnect and use local storage only.',
+    current
+  );
+  if(input === null) return;
+  const val = input.trim();
+  if(!val) {
+    localStorage.removeItem(GS_URL_KEY);
+    setSyncStatus('nourl');
+    alert('Disconnected. Using local storage only.');
+    return;
+  }
+  localStorage.setItem(GS_URL_KEY, val);
+  loadFromSheets().then(ok => {
+    render();
+    alert(ok ? '✅ Connected to Google Sheets! Data loaded.' : '✅ Connected! No data yet — start adding entries.');
+  });
+}
+
+// ════════════════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════════════════
+loadData(); // Load from localStorage instantly
 render();
+
+// Then try to load fresher data from Google Sheets
+setTimeout(async () => {
+  if(getScriptUrl()) {
+    const ok = await loadFromSheets();
+    if(ok) render();
+  } else {
+    setSyncStatus('nourl');
+  }
+}, 500);
+
 </script>
 </body>
 </html>
