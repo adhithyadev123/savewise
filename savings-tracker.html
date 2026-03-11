@@ -1,0 +1,1470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="theme-color" content="#0a0e1a"/>
+<title>SaveWise – Savings Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:#0a0e1a; --bg2:#0f1525; --card:#131929; --card2:#1a2035;
+  --border:#1e2a42; --input:#111827;
+  --green:#22d3a5; --green2:#10b981; --blue:#6366f1;
+  --purple:#a78bfa; --amber:#f59e0b; --rose:#fb7185;
+  --text:#e2e8f0; --muted:#64748b; --muted2:#94a3b8;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+/* HEADER */
+.header{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;backdrop-filter:blur(10px)}
+.logo{font-family:'Nunito',sans-serif;font-size:22px;font-weight:800;background:linear-gradient(135deg,var(--green),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.logo-sub{font-size:11px;color:var(--muted);font-family:'Plus Jakarta Sans',sans-serif;font-weight:500;margin-top:1px;-webkit-text-fill-color:var(--muted)}
+
+/* NAV */
+.top-nav{display:flex;gap:6px}
+.nav-btn{padding:7px 14px;border-radius:99px;border:1px solid var(--border);font-size:12px;font-weight:700;cursor:pointer;background:var(--card);color:var(--muted);white-space:nowrap;transition:all .2s;font-family:'Plus Jakarta Sans',sans-serif}
+.nav-btn.active{background:var(--green);color:#0a0e1a;border-color:var(--green)}
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);z-index:200;padding:8px 0 env(safe-area-inset-bottom,8px)}
+.bottom-nav-inner{display:flex;justify-content:space-around}
+.bnav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 14px;border:none;background:transparent;color:var(--muted);font-size:10px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;cursor:pointer;transition:all .2s;border-radius:10px}
+.bnav-btn .ico{font-size:20px}
+.bnav-btn.active{color:var(--green)}
+
+/* LAYOUT */
+.main{max-width:900px;margin:0 auto;padding:20px 16px 100px}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:18px;margin-bottom:14px}
+.card-title{font-family:'Nunito',sans-serif;font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+
+/* STAT GRID */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+@media(min-width:600px){.stat-grid{grid-template-columns:repeat(4,1fr)}}
+.stat-card{background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:16px;padding:16px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:-20px;right:-20px;width:70px;height:70px;border-radius:50%;opacity:.06;background:currentColor}
+.stat-ico{font-size:22px;margin-bottom:8px}
+.stat-lbl{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.8px}
+.stat-val{font-family:'Nunito',sans-serif;font-size:18px;font-weight:800;margin-top:4px}
+.stat-sub{font-size:10px;color:var(--muted);margin-top:3px}
+
+/* INPUTS */
+.field{margin-bottom:12px}
+label{font-size:11px;color:var(--muted);display:block;margin-bottom:5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px}
+input[type=text],input[type=number],select,textarea{width:100%;background:var(--input);border:1px solid var(--border);border-radius:12px;padding:11px 14px;font-size:14px;color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;outline:none;transition:border-color .2s;-webkit-appearance:none;appearance:none}
+input:focus,select:focus,textarea:focus{border-color:var(--green)}
+textarea{resize:none;height:70px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:5px;border-radius:3px;background:var(--border);outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--green);cursor:pointer;box-shadow:0 0 10px rgba(34,211,165,.4)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+
+/* BUTTONS */
+.btn{padding:10px 18px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .15s;border:none}
+.btn-green{background:var(--green);color:#0a0e1a}
+.btn-green:hover{background:#34d3b0}
+.btn-outline{background:transparent;color:var(--muted);border:1px solid var(--border)}
+.btn-outline:hover{border-color:var(--green);color:var(--green)}
+.btn-danger{background:rgba(251,113,133,.12);color:var(--rose);border:1px solid rgba(251,113,133,.2)}
+.btn-sm{padding:6px 12px;font-size:12px;border-radius:9px}
+.btn-full{width:100%}
+.flex-end{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+
+/* PROGRESS */
+.prog-bar{height:8px;border-radius:99px;background:var(--border);overflow:hidden;margin:8px 0}
+.prog-fill{height:100%;border-radius:99px;transition:width .6s ease}
+.prog-sm{height:5px}
+
+/* SECTION HEADER */
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.sec-title{font-family:'Nunito',sans-serif;font-size:20px;font-weight:800}
+
+/* ADD PANEL */
+.add-panel{background:var(--card);border:1px solid var(--green);border-radius:18px;padding:18px;margin-bottom:14px;box-shadow:0 0 24px rgba(34,211,165,.08)}
+
+/* SAVING TYPE PILL */
+.type-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700;border:1px solid}
+
+/* SAVING ITEM */
+.saving-item{border-bottom:1px solid var(--border);padding:14px 0}
+.saving-item:last-child{border-bottom:none}
+.saving-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.saving-left{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
+.saving-ico{width:42px;height:42px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.saving-name{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.saving-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.saving-amt{font-family:'Nunito',sans-serif;font-weight:800;font-size:16px;flex-shrink:0}
+.saving-actions{display:flex;gap:6px;flex-shrink:0}
+.ic-btn{background:var(--card2);border:1px solid var(--border);color:var(--muted);border-radius:9px;padding:6px 10px;font-size:12px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;transition:all .15s}
+.ic-btn:hover{border-color:var(--green);color:var(--green)}
+
+/* GOAL CARD */
+.goal-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:18px;margin-bottom:12px;position:relative}
+.goal-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.goal-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.goal-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}
+.goal-stat{background:var(--card2);border-radius:10px;padding:10px;text-align:center}
+.goal-stat-lbl{font-size:10px;color:var(--muted);font-weight:700}
+.goal-stat-val{font-weight:800;font-size:13px;margin-top:3px}
+
+/* CHART */
+.chart-wrap{position:relative;height:220px;margin:10px 0}
+
+/* MILESTONE */
+.milestone{border-left:3px solid;border-radius:12px;padding:14px 16px;background:var(--card2);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+
+/* INCOME SOURCE */
+.inc-item{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border)}
+.inc-item:last-child{border-bottom:none}
+.inc-left{display:flex;align-items:center;gap:10px}
+.inc-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* DIVIDER */
+hr{border:none;border-top:1px solid var(--border);margin:14px 0}
+
+/* SUMMARY BAR */
+.sum-bar{background:linear-gradient(135deg,rgba(34,211,165,.1),rgba(99,102,241,.1));border:1px solid rgba(34,211,165,.2);border-radius:16px;padding:16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.sum-item{text-align:center}
+.sum-lbl{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.7px}
+.sum-val{font-family:'Nunito',sans-serif;font-size:18px;font-weight:800;margin-top:3px}
+
+/* MONTHLY LOG */
+.month-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+.month-row:last-child{border-bottom:none}
+.month-bar-wrap{flex:1;margin:0 14px}
+.month-bar{height:6px;border-radius:99px;background:var(--border);overflow:hidden}
+.month-bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--green),var(--blue))}
+
+/* RING */
+canvas.ring{display:block}
+
+/* GLOW */
+.glow-green{box-shadow:0 0 24px rgba(34,211,165,.15)}
+
+/* BADGE */
+.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700}
+
+@media(max-width:600px){
+  .top-nav{display:none}
+  .bottom-nav{display:block}
+  .row3{grid-template-columns:1fr 1fr}
+  .goal-stats{grid-template-columns:1fr 1fr}
+  .sum-bar{justify-content:center}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="logo">💚 SaveWise</div>
+    <div class="logo-sub">Savings Mode Tracker</div>
+  </div>
+  <div class="top-nav" id="topNav"></div>
+</div>
+
+<div class="main" id="main"></div>
+
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner" id="bottomNav"></div>
+</nav>
+
+<script>
+// ════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════
+const S = {
+  tab: 'dashboard',
+  incomes: [],
+  savings: [],
+  monthlyLog: [],
+  goals: [],
+  projMonths: 24,
+  showAddIncome: false,
+  showAddSaving: false,
+  showAddGoal: false,
+  addSavingCat: null,
+  addingRecordTo: null,
+  editingIncome: null,
+  editingSaving: null,
+  editingGoal: null,
+  charts: {},
+};
+
+const SAVING_TYPES = ['Safety Net','Short-term','Long-term','Investment','Education','Retirement','Travel','Other'];
+const SAVING_ICONS = ['🛡️','✈️','📈','📚','🏠','💍','🚗','🎯','💰','🎓','💊','🌱'];
+const FREQS = ['Monthly','Weekly','One-time'];
+const PRIORITIES = ['High','Medium','Low'];
+const COLORS = ['#22d3a5','#6366f1','#a78bfa','#f59e0b','#fb7185','#34d399','#60a5fa','#f472b6'];
+const TYPE_COLORS = {
+  'Safety Net':'#22d3a5','Short-term':'#f59e0b','Long-term':'#6366f1',
+  'Investment':'#a78bfa','Education':'#60a5fa','Retirement':'#34d399',
+  'Travel':'#fb7185','Other':'#94a3b8'
+};
+const PRIORITY_COLORS = { High:'#fb7185', Medium:'#f59e0b', Low:'#22d3a5' };
+
+const uid = () => Date.now() + Math.random();
+const fmt = v => new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(v||0);
+const totalIncome = () => S.incomes.reduce((s,i) => s + Number(i.amount), 0);
+
+// Total savings = sum of every single record across all entries
+const totalSavings = () => {
+  let total = 0;
+  S.savings.forEach(sv => (sv.records||[]).forEach(r => total += Number(r.amount)));
+  return total;
+};
+
+// Current month label e.g. "Mar 2026"
+const currentMonthLabel = () => {
+  const now = new Date();
+  return `${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][now.getMonth()]} ${now.getFullYear()}`;
+};
+
+// Only sum records where deposit date (dm+dy) matches current month & year
+// If no deposit date set, fall back to addedOn stamp
+const thisMonthSaved = () => {
+  const now = new Date();
+  const curMonth = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][now.getMonth()];
+  const curYear = String(now.getFullYear());
+  let total = 0;
+  S.savings.forEach(sv => {
+    (sv.records || []).forEach(r => {
+      if(r.dm && r.dy) {
+        // User set explicit deposit date — use only that
+        if(r.dm === curMonth && String(r.dy) === curYear) total += Number(r.amount);
+      } else {
+        // No date set — use the auto addedOn stamp
+        if(r.addedOn && r.addedOn.includes(curMonth) && r.addedOn.includes(curYear)) total += Number(r.amount);
+      }
+    });
+  });
+  return total;
+};
+
+const savingsRate = () => totalIncome() > 0 ? Math.round((thisMonthSaved()/totalIncome())*100) : 0;
+const totalGoalSaved = () => S.goals.reduce((s,g) => s + Number(g.saved), 0);
+const totalGoalTarget = () => S.goals.reduce((s,g) => s + Number(g.target), 0);
+const avgMonthlySaved = () => S.monthlyLog.length > 0 ? S.monthlyLog.reduce((s,m)=>s+m.saved,0) / S.monthlyLog.length : 0;
+
+const TABS = [
+  {id:'dashboard',label:'Dashboard',ico:'📊'},
+  {id:'savings',label:'Savings',ico:'💰'},
+  {id:'goals',label:'Goals',ico:'🎯'},
+  {id:'income',label:'Income',ico:'💵'},
+  {id:'projection',label:'Project',ico:'📈'},
+];
+
+// ════════════════════════════════════════════════════════
+// RENDER ENGINE
+// ════════════════════════════════════════════════════════
+function render() {
+  renderNav();
+  const main = document.getElementById('main');
+  const pages = {
+    dashboard: pageDashboard,
+    savings: pageSavings,
+    goals: pageGoals,
+    income: pageIncome,
+    projection: pageProjection,
+  };
+  main.innerHTML = pages[S.tab]();
+  afterRender();
+}
+
+function renderNav() {
+  document.getElementById('topNav').innerHTML = TABS.map(t =>
+    `<button class="nav-btn ${S.tab===t.id?'active':''}" onclick="go('${t.id}')">${t.label}</button>`
+  ).join('');
+  document.getElementById('bottomNav').innerHTML = TABS.map(t =>
+    `<button class="bnav-btn ${S.tab===t.id?'active':''}" onclick="go('${t.id}')">
+      <span class="ico">${t.ico}</span>${t.label}
+    </button>`
+  ).join('');
+}
+
+function go(tab) {
+  S.tab=tab; S.showAddIncome=false; S.showAddSaving=false; S.showAddGoal=false;
+  S.editingIncome=null; S.editingSaving=null; S.editingGoal=null;
+  S.addSavingCat=null; S.addingRecordTo=null;
+  render();
+}
+
+function afterRender() {
+  if (S.tab==='dashboard') { drawRing('rateRing', savingsRate(), '#22d3a5'); drawMiniChart(); }
+  if (S.tab==='projection') drawProjChart();
+}
+
+// ════════════════════════════════════════════════════════
+// PAGE: DASHBOARD
+// ════════════════════════════════════════════════════════
+function pageDashboard() {
+  const ti = totalIncome(), ts = totalSavings(), sr = savingsRate();
+  const avg = avgMonthlySaved();
+  const avgPct = ti > 0 ? Math.round((avg / ti) * 100) : 0;
+  const byType = {};
+  S.savings.forEach(s => byType[s.type] = (byType[s.type]||0) + Number(s.amount));
+  const maxSaved = Math.max(...S.monthlyLog.map(m => m.saved), 1);
+  const freeToSpend = Math.max(0, ti - ts);
+
+  return `
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:8px">
+    <div>
+      <div class="sec-title">Dashboard</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:2px">All data synced from Income, Savings & Goals pages</div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);background:var(--card2);border:1px solid var(--border);border-radius:99px;padding:5px 12px">
+      🕐 ${new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}
+    </div>
+  </div>
+
+  <!-- 3 KEY STATS -->
+  <div class="stat-grid">
+    <div class="stat-card" style="cursor:pointer;border-color:rgba(34,211,165,.2)" onclick="go('income')">
+      <div class="stat-ico">💵</div>
+      <div class="stat-lbl">Total Income</div>
+      <div class="stat-val" style="color:#22d3a5">${fmt(ti)}</div>
+      <div class="stat-sub">${S.incomes.length} source${S.incomes.length!==1?'s':''} · tap to edit →</div>
+    </div>
+    <div class="stat-card" style="cursor:pointer;border-color:rgba(99,102,241,.2)" onclick="go('savings')">
+      <div class="stat-ico">💰</div>
+      <div class="stat-lbl">Total Savings</div>
+      <div class="stat-val" style="color:#6366f1">${fmt(ts)}</div>
+      <div class="stat-sub">${S.savings.length} bucket${S.savings.length!==1?'s':''} · tap to edit →</div>
+    </div>
+    <div class="stat-card" style="border-color:rgba(245,158,11,.2)">
+      <div class="stat-ico">📊</div>
+      <div class="stat-lbl">Avg Monthly Saved</div>
+      <div class="stat-val" style="color:#f59e0b">${avgPct}%</div>
+      <div class="stat-sub">${fmt(avg)} avg · last ${S.monthlyLog.length} months</div>
+    </div>
+    <div class="stat-card" style="cursor:pointer;border-color:rgba(251,113,133,.15)" onclick="go('projection')">
+      <div class="stat-ico">📈</div>
+      <div class="stat-lbl">Free to Spend</div>
+      <div class="stat-val" style="color:#fb7185">${fmt(freeToSpend)}</div>
+      <div class="stat-sub">${ti>0?Math.round(freeToSpend/ti*100):0}% of income remaining</div>
+    </div>
+  </div>
+
+  <!-- SAVINGS RATE CARD -->
+  <div class="card">
+    <div class="card-title">💚 Savings Rate — <span style="color:var(--green)">${sr}% of income saved</span></div>
+    <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+      <canvas id="rateRing" width="100" height="100" class="ring"></canvas>
+      <div style="flex:1;min-width:160px">
+        <div style="font-family:'Nunito',sans-serif;font-size:42px;font-weight:800;color:var(--green);line-height:1">${sr}%</div>
+        <div style="color:var(--muted);font-size:13px;margin-top:4px">of income saved this month</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">Based on: <strong style="color:var(--text)">${fmt(thisMonthSaved())} saved</strong> ÷ <strong style="color:var(--text)">${fmt(ti)} income</strong></div>
+        <div style="margin-top:14px;display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px">
+            <span style="color:var(--muted)">💵 Income</span>
+            <span style="font-weight:700;cursor:pointer;color:var(--green)" onclick="go('income')">${fmt(ti)} ↗</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px">
+            <span style="color:var(--muted)">💰 Saving</span>
+            <span style="font-weight:700;cursor:pointer;color:#6366f1" onclick="go('savings')">${fmt(ts)} ↗</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px">
+            <span style="color:var(--muted)">🟡 Remaining</span>
+            <span style="font-weight:700;color:var(--amber)">${fmt(freeToSpend)}</span>
+          </div>
+        </div>
+      </div>
+      <div style="flex:1;min-width:160px">
+        <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px">By Saving Type</div>
+        ${Object.entries(byType).map(([type,amt])=>`
+          <div style="margin-bottom:9px">
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+              <span style="color:${TYPE_COLORS[type]||'#94a3b8'};font-weight:700">${type}</span>
+              <span style="font-weight:600">${fmt(amt)}</span>
+            </div>
+            <div class="prog-bar prog-sm"><div class="prog-fill" style="width:${ts>0?(amt/ts*100).toFixed(1):0}%;background:${TYPE_COLORS[type]||'#94a3b8'}"></div></div>
+          </div>
+        `).join('')}
+        <button class="btn btn-outline btn-full btn-sm" style="margin-top:6px" onclick="go('savings')">Manage Buckets →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MONTHLY HISTORY CHART -->
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div class="card-title" style="margin-bottom:0">📅 Monthly Savings History</div>
+      <div style="display:flex;gap:10px;font-size:12px">
+        <span>Avg: <strong style="color:var(--green)">${fmt(avg)}</strong></span>
+        <span style="color:var(--muted)">|</span>
+        <span>Best: <strong style="color:var(--amber)">${fmt(maxSaved)}</strong></span>
+      </div>
+    </div>
+    <div class="chart-wrap"><canvas id="miniChart"></canvas></div>
+    <hr/>
+    ${S.monthlyLog.map(m=>{
+      const pct = (m.saved/maxSaved*100).toFixed(1);
+      const isAvg = Math.abs(m.saved - avg) < avg * 0.05;
+      const isHigh = m.saved >= maxSaved;
+      return `
+      <div class="month-row">
+        <div style="font-weight:700;font-size:13px;width:36px">${m.month}</div>
+        <div class="month-bar-wrap">
+          <div class="month-bar"><div class="month-bar-fill" style="width:${pct}%"></div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="font-family:'Nunito',sans-serif;font-weight:800;font-size:14px;color:${isHigh?'var(--amber)':'var(--green)'}">${fmt(m.saved)}</div>
+          ${isHigh?`<span style="font-size:10px;background:rgba(245,158,11,.15);color:var(--amber);border-radius:99px;padding:1px 6px;font-weight:700">BEST</span>`:''}
+        </div>
+      </div>`
+    }).join('')}
+    <button class="btn btn-outline btn-full btn-sm" style="margin-top:10px" onclick="go('savings')">+ Log This Month →</button>
+  </div>
+
+  <!-- QUICK LINKS -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    ${[
+      {ico:'💰',label:'Savings',sub:S.savings.length+' buckets · '+fmt(ts),tab:'savings',color:'#6366f1'},
+      {ico:'🎯',label:'Goals',sub:S.goals.length+' goals active',tab:'goals',color:'#a78bfa'},
+      {ico:'💵',label:'Income',sub:S.incomes.length+' sources · '+fmt(ti),tab:'income',color:'#22d3a5'},
+      {ico:'📈',label:'Projection',sub:'Plan your future',tab:'projection',color:'#f59e0b'},
+    ].map(l=>`
+      <div onclick="go('${l.tab}')" style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;cursor:pointer;transition:border-color .2s;border-left:3px solid ${l.color}" onmouseover="this.style.borderColor='${l.color}'" onmouseout="this.style.borderLeftColor='${l.color}';this.style.borderTopColor='var(--border)';this.style.borderRightColor='var(--border)';this.style.borderBottomColor='var(--border)'">
+        <div style="font-size:22px;margin-bottom:6px">${l.ico}</div>
+        <div style="font-weight:800;font-size:14px">${l.label}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">${l.sub}</div>
+      </div>
+    `).join('')}
+  </div>`;
+}
+
+// ════════════════════════════════════════════════════════
+// PAGE: SAVINGS
+// ════════════════════════════════════════════════════════
+const SAV_CATS = ['Monthly Savings','Current Savings','Bank Deposit','Mutual Fund','Recurring Deposit (RD)','Fixed Deposit (FD)','Other'];
+const SAV_CAT_COLORS = {
+  'Monthly Savings':'#22d3a5','Current Savings':'#34d399','Bank Deposit':'#6366f1','Mutual Fund':'#a78bfa',
+  'Recurring Deposit (RD)':'#f59e0b','Fixed Deposit (FD)':'#fb7185','Other':'#94a3b8'
+};
+const BANKS = ['SBI','HDFC Bank','ICICI Bank','Axis Bank','Kotak Mahindra','Bank of Baroda','Canara Bank','Punjab National Bank','Union Bank','IndusInd Bank','Federal Bank','South Indian Bank','Other'];
+const MF_TYPES = ['Equity','Debt','Hybrid','Index Fund','ELSS','Liquid','Other'];
+const MONTHS_LIST = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// Categories where amount = one-time/current deposit (not monthly)
+const ONE_TIME_CATS = ['Current Savings','Bank Deposit','Fixed Deposit (FD)'];
+const isOneTime = cat => ONE_TIME_CATS.includes(cat);
+const amtLabel = cat => {
+  if(cat==='Current Savings') return 'Current Amount in Bank (₹)';
+  if(cat==='Bank Deposit'||cat==='Fixed Deposit (FD)') return 'Deposit Amount (₹)';
+  return 'Monthly Amount (₹)';
+};
+const amtSuffix = cat => {
+  if(cat==='Current Savings') return 'current balance';
+  if(cat==='Bank Deposit'||cat==='Fixed Deposit (FD)') return 'deposited';
+  return '/month';
+};
+
+function savingCatColor(cat){ return SAV_CAT_COLORS[cat]||'#94a3b8'; }
+function savingCatIcon(cat){
+  return {
+    'Monthly Savings':'💰','Current Savings':'🏧','Bank Deposit':'🏦','Mutual Fund':'📈',
+    'Recurring Deposit (RD)':'🔄','Fixed Deposit (FD)':'🔒','Other':'📦'
+  }[cat]||'💰';
+}
+
+function dayOpts(selVal=''){
+  return `<option value="">Day</option>${Array.from({length:31},(_,i)=>`<option value="${i+1}" ${selVal==i+1?'selected':''}>${i+1}</option>`).join('')}`;
+}
+function monthOpts(selVal=''){
+  return `<option value="">Month</option>${MONTHS_LIST.map(m=>`<option value="${m}" ${selVal===m?'selected':''}>${m}</option>`).join('')}`;
+}
+function yearOpts(selVal=''){
+  return `<option value="">Year</option>${Array.from({length:10},(_,i)=>`<option value="${2023+i}" ${selVal==2023+i?'selected':''}>${2023+i}</option>`).join('')}`;
+}
+
+function renderSavingExtraFields(cat, sv={}) {
+  if(cat==='Current Savings') return `
+    <div style="background:var(--card2);border-radius:12px;padding:12px;margin-top:8px">
+      <div style="font-size:11px;color:#34d399;font-weight:700;margin-bottom:10px">🏧 Current Savings Details</div>
+      <div class="row2">
+        <div class="field"><label>Bank Name</label>
+          <select id="sv_bank">${BANKS.map(b=>`<option value="${b}" ${sv.bank===b?'selected':''}>${b}</option>`).join('')}</select>
+        </div>
+        <div class="field"><label>Account Number (optional)</label>
+          <input type="text" id="sv_accno" placeholder="XXXX XXXX XXXX" value="${sv.accno||''}"/>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Account Type</label>
+          <select id="sv_acctype">
+            ${['Savings','Current','Salary','Joint'].map(t=>`<option ${sv.acctype===t?'selected':''}>${t}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field"><label>Interest Rate % (optional)</label>
+          <input type="number" id="sv_rate" placeholder="e.g. 3.5" step="0.1" value="${sv.rate||''}"/>
+        </div>
+      </div>
+      <div class="field"><label>📅 As of Date (when this balance was recorded)</label></div>
+      <div class="row3">
+        <div class="field"><label>Day</label><select id="sv_dd">${dayOpts(sv.dd)}</select></div>
+        <div class="field"><label>Month</label><select id="sv_dm">${monthOpts(sv.dm)}</select></div>
+        <div class="field"><label>Year</label><select id="sv_dy">${yearOpts(sv.dy)}</select></div>
+      </div>
+    </div>`;
+
+  if(cat==='Bank Deposit'||cat==='Monthly Savings') return `
+    <div style="background:var(--card2);border-radius:12px;padding:12px;margin-top:8px">
+      <div style="font-size:11px;color:var(--green);font-weight:700;margin-bottom:10px">🏦 Bank Details</div>
+      <div class="row2">
+        <div class="field"><label>Bank Name</label>
+          <select id="sv_bank">${BANKS.map(b=>`<option value="${b}" ${sv.bank===b?'selected':''}>${b}</option>`).join('')}</select>
+        </div>
+        <div class="field"><label>Account Number (optional)</label>
+          <input type="text" id="sv_accno" placeholder="XXXX XXXX XXXX" value="${sv.accno||''}"/>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Account Type</label>
+          <select id="sv_acctype">
+            ${['Savings','Current','Salary','Joint'].map(t=>`<option ${sv.acctype===t?'selected':''}>${t}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field"><label>Interest Rate % (optional)</label>
+          <input type="number" id="sv_rate" placeholder="e.g. 3.5" step="0.1" value="${sv.rate||''}"/>
+        </div>
+      </div>
+      <div class="field"><label>📅 Deposit Date</label></div>
+      <div class="row3">
+        <div class="field"><label>Day</label><select id="sv_dd">${dayOpts(sv.dd)}</select></div>
+        <div class="field"><label>Month</label><select id="sv_dm">${monthOpts(sv.dm)}</select></div>
+        <div class="field"><label>Year</label><select id="sv_dy">${yearOpts(sv.dy)}</select></div>
+      </div>
+    </div>`;
+
+  if(cat==='Mutual Fund') return `
+    <div style="background:var(--card2);border-radius:12px;padding:12px;margin-top:8px">
+      <div style="font-size:11px;color:var(--purple);font-weight:700;margin-bottom:10px">📈 Mutual Fund Details</div>
+      <div class="row2">
+        <div class="field"><label>Fund Name</label>
+          <input type="text" id="sv_fundname" placeholder="e.g. Mirae Asset Large Cap" value="${sv.fundname||''}"/>
+        </div>
+        <div class="field"><label>Fund Type</label>
+          <select id="sv_mftype">${MF_TYPES.map(t=>`<option ${sv.mftype===t?'selected':''}>${t}</option>`).join('')}</select>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Folio / Account No. (optional)</label>
+          <input type="text" id="sv_folio" placeholder="Folio number" value="${sv.folio||''}"/>
+        </div>
+        <div class="field"><label>Expected Returns % (optional)</label>
+          <input type="number" id="sv_rate" placeholder="e.g. 12" step="0.1" value="${sv.rate||''}"/>
+        </div>
+      </div>
+      <div class="field"><label>📅 SIP Start Date</label></div>
+      <div class="row3">
+        <div class="field"><label>Day</label><select id="sv_dd">${dayOpts(sv.dd)}</select></div>
+        <div class="field"><label>Month</label><select id="sv_dm">${monthOpts(sv.dm)}</select></div>
+        <div class="field"><label>Year</label><select id="sv_dy">${yearOpts(sv.dy)}</select></div>
+      </div>
+      <div class="field" style="margin-top:4px"><label>📅 Monthly SIP Debit Date (day of month)</label>
+        <select id="sv_sipday">
+          <option value="">Select day</option>
+          ${[1,5,7,10,12,15,18,20,25,28].map(d=>`<option value="${d}" ${sv.sipday==d?'selected':''}>${d}${d===1?'st':d===2?'nd':d===3?'rd':'th'} of every month</option>`).join('')}
+        </select>
+      </div>
+    </div>`;
+
+  if(cat==='Recurring Deposit (RD)') return `
+    <div style="background:var(--card2);border-radius:12px;padding:12px;margin-top:8px">
+      <div style="font-size:11px;color:var(--amber);font-weight:700;margin-bottom:10px">🔄 RD Details</div>
+      <div class="row2">
+        <div class="field"><label>Bank Name</label>
+          <select id="sv_bank">${BANKS.map(b=>`<option value="${b}" ${sv.bank===b?'selected':''}>${b}</option>`).join('')}</select>
+        </div>
+        <div class="field"><label>RD Account No. (optional)</label>
+          <input type="text" id="sv_accno" placeholder="RD Account number" value="${sv.accno||''}"/>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Interest Rate %</label>
+          <input type="number" id="sv_rate" placeholder="e.g. 6.5" step="0.1" value="${sv.rate||''}"/>
+        </div>
+        <div class="field"><label>Tenure (months)</label>
+          <input type="number" id="sv_tenure" placeholder="e.g. 12" value="${sv.tenure||''}"/>
+        </div>
+      </div>
+      <div class="field"><label>📅 RD Start Date</label></div>
+      <div class="row3">
+        <div class="field"><label>Day</label><select id="sv_dd">${dayOpts(sv.dd)}</select></div>
+        <div class="field"><label>Month</label><select id="sv_dm">${monthOpts(sv.dm)}</select></div>
+        <div class="field"><label>Year</label><select id="sv_dy">${yearOpts(sv.dy)}</select></div>
+      </div>
+      <div class="field" style="margin-top:4px"><label>📅 Monthly Debit Day</label>
+        <select id="sv_sipday">
+          <option value="">Select day</option>
+          ${Array.from({length:28},(_,i)=>`<option value="${i+1}" ${sv.sipday==i+1?'selected':''}>${i+1}${i===0?'st':i===1?'nd':i===2?'rd':'th'} of every month</option>`).join('')}
+        </select>
+      </div>
+      <div class="field" style="margin-top:4px"><label>📅 Maturity Date</label></div>
+      <div class="row3">
+        <div class="field"><label>Day</label><select id="sv_matd">${dayOpts(sv.matd)}</select></div>
+        <div class="field"><label>Month</label><select id="sv_matm">${monthOpts(sv.matm)}</select></div>
+        <div class="field"><label>Year</label><select id="sv_maty">${yearOpts(sv.maty)}</select></div>
+      </div>
+    </div>`;
+
+  if(cat==='Fixed Deposit (FD)') return `
+    <div style="background:var(--card2);border-radius:12px;padding:12px;margin-top:8px">
+      <div style="font-size:11px;color:var(--rose);font-weight:700;margin-bottom:10px">🔒 FD Details</div>
+      <div class="row2">
+        <div class="field"><label>Bank Name</label>
+          <select id="sv_bank">${BANKS.map(b=>`<option value="${b}" ${sv.bank===b?'selected':''}>${b}</option>`).join('')}</select>
+        </div>
+        <div class="field"><label>FD Account No. (optional)</label>
+          <input type="text" id="sv_accno" placeholder="FD Account number" value="${sv.accno||''}"/>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Interest Rate %</label>
+          <input type="number" id="sv_rate" placeholder="e.g. 7.1" step="0.1" value="${sv.rate||''}"/>
+        </div>
+        <div class="field"><label>FD Amount (₹)</label>
+          <input type="number" id="sv_fdamt" placeholder="Total FD amount" value="${sv.fdamt||''}"/>
+        </div>
+      </div>
+      <div class="field"><label>📅 FD Start Date</label></div>
+      <div class="row3">
+        <div class="field"><label>Day</label><select id="sv_dd">${dayOpts(sv.dd)}</select></div>
+        <div class="field"><label>Month</label><select id="sv_dm">${monthOpts(sv.dm)}</select></div>
+        <div class="field"><label>Year</label><select id="sv_dy">${yearOpts(sv.dy)}</select></div>
+      </div>
+      <div class="field" style="margin-top:4px"><label>📅 Maturity Date</label></div>
+      <div class="row3">
+        <div class="field"><label>Day</label><select id="sv_matd">${dayOpts(sv.matd)}</select></div>
+        <div class="field"><label>Month</label><select id="sv_matm">${monthOpts(sv.matm)}</select></div>
+        <div class="field"><label>Year</label><select id="sv_maty">${yearOpts(sv.maty)}</select></div>
+      </div>
+    </div>`;
+
+  return '';
+}
+
+function collectSavingExtra(cat) {
+  const g = id => { const el=document.getElementById(id); return el?el.value:''; };
+  if(cat==='Current Savings') return { bank:g('sv_bank'), accno:g('sv_accno'), acctype:g('sv_acctype'), rate:g('sv_rate'), dd:g('sv_dd'), dm:g('sv_dm'), dy:g('sv_dy') };
+  if(cat==='Bank Deposit'||cat==='Monthly Savings') return { bank:g('sv_bank'), accno:g('sv_accno'), acctype:g('sv_acctype'), rate:g('sv_rate'), dd:g('sv_dd'), dm:g('sv_dm'), dy:g('sv_dy') };
+  if(cat==='Mutual Fund') return { fundname:g('sv_fundname'), mftype:g('sv_mftype'), folio:g('sv_folio'), rate:g('sv_rate'), dd:g('sv_dd'), dm:g('sv_dm'), dy:g('sv_dy'), sipday:g('sv_sipday') };
+  if(cat==='Recurring Deposit (RD)') return { bank:g('sv_bank'), accno:g('sv_accno'), rate:g('sv_rate'), tenure:g('sv_tenure'), dd:g('sv_dd'), dm:g('sv_dm'), dy:g('sv_dy'), sipday:g('sv_sipday'), matd:g('sv_matd'), matm:g('sv_matm'), maty:g('sv_maty') };
+  if(cat==='Fixed Deposit (FD)') return { bank:g('sv_bank'), accno:g('sv_accno'), rate:g('sv_rate'), fdamt:g('sv_fdamt'), dd:g('sv_dd'), dm:g('sv_dm'), dy:g('sv_dy'), matd:g('sv_matd'), matm:g('sv_matm'), maty:g('sv_maty') };
+  return {};
+}
+
+function renderSavingCard(sv) {
+  const col = savingCatColor(sv.cat||sv.type);
+  const ico = savingCatIcon(sv.cat||sv.type);
+  const cat = sv.cat||sv.type||'Monthly Savings';
+  const records = sv.records || [{ rid: sv.id+'_legacy', amount: sv.amount, note: sv.note||'', addedOn:'—' }];
+  const total = records.reduce((a,r)=>a+Number(r.amount),0);
+
+  return `
+  <div class="saving-item">
+    ${S.editingSaving===sv.id ? `
+      <div style="background:var(--card2);border-radius:14px;padding:14px">
+        <div style="font-size:12px;color:${col};font-weight:700;margin-bottom:10px">✏️ Edit Label</div>
+        <div class="field"><label>Name / Label</label><input type="text" id="eSvName-${sv.id}" value="${sv.name}"/></div>
+        <div class="field"><label>Category</label>
+          <select id="eSvCat-${sv.id}" onchange="S.savings=S.savings.map(s=>s.id===${sv.id}?{...s,cat:this.value,type:this.value}:s);render()">
+            ${SAV_CATS.map(c=>`<option ${c===cat?'selected':''}>${c}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field"><label>Note</label><input type="text" id="eSvNote-${sv.id}" value="${sv.note||''}"/></div>
+        <div class="flex-end">
+          <button class="btn btn-outline btn-sm" onclick="S.editingSaving=null;render()">Cancel</button>
+          <button class="btn btn-green btn-sm" onclick="saveSaving(${sv.id})">Update</button>
+        </div>
+      </div>
+    ` : `
+      <!-- Label header -->
+      <div class="saving-row" style="padding-bottom:10px">
+        <div class="saving-left">
+          <div class="saving-ico" style="background:${col}20;font-size:20px">${ico}</div>
+          <div style="min-width:0;flex:1">
+            <div class="saving-name">${sv.name}</div>
+            <div style="margin-top:3px">
+              <span class="type-pill" style="color:${col};border-color:${col}30;background:${col}15;font-size:10px">${cat}</span>
+              <span style="font-size:11px;color:var(--muted);margin-left:8px">${records.length} record${records.length!==1?'s':''}</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+          <div style="text-align:right">
+            <div class="saving-amt" style="color:${col}">${fmt(total)}</div>
+            <div style="font-size:10px;color:var(--muted)">${amtSuffix(cat)}</div>
+          </div>
+          <button class="ic-btn" onclick="S.editingSaving=${sv.id};render()" title="Edit label">✏️</button>
+          <button class="ic-btn" style="color:var(--rose);border-color:rgba(251,113,133,.2)" onclick="deleteSaving(${sv.id})" title="Delete all">✕</button>
+        </div>
+      </div>
+
+      <!-- Records list -->
+      <div style="margin-left:14px;border-left:2px solid ${col}30;padding-left:12px">
+        ${records.map((r,i)=>{
+          const startDate = (r.dd&&r.dm&&r.dy)?`${r.dd} ${r.dm} ${r.dy}`:(r.dm&&r.dy)?`${r.dm} ${r.dy}`:'';
+          const matDate = (r.matd&&r.matm&&r.maty)?`${r.matd} ${r.matm} ${r.maty}`:(r.matm&&r.maty)?`${r.matm} ${r.maty}`:'';
+          const sipday = r.sipday?`Every ${r.sipday}${r.sipday==1?'st':r.sipday==2?'nd':r.sipday==3?'rd':'th'}`:'';
+          let tags=[];
+          if(r.bank) tags.push(`🏦 ${r.bank}`);
+          if(r.accno) tags.push(`Acc: ${r.accno}`);
+          if(r.acctype) tags.push(r.acctype);
+          if(r.fundname) tags.push(`📊 ${r.fundname}`);
+          if(r.mftype) tags.push(r.mftype);
+          if(r.folio) tags.push(`Folio: ${r.folio}`);
+          if(r.rate) tags.push(`${r.rate}% p.a.`);
+          if(r.tenure) tags.push(`${r.tenure} mo tenure`);
+          if(r.fdamt) tags.push(`FD: ${fmt(r.fdamt)}`);
+          return `
+          <div style="padding:10px 0;border-bottom:1px dashed ${col}20;display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                <span style="font-family:'Nunito',sans-serif;font-weight:800;font-size:15px;color:${col}">${fmt(r.amount)}</span>
+                ${r.note?`<span style="font-size:11px;color:var(--muted2)">${r.note}</span>`:''}
+              </div>
+              ${tags.length>0?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px">
+                ${tags.map(t=>`<span style="font-size:10px;background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:2px 7px;color:var(--muted2)">${t}</span>`).join('')}
+              </div>`:''}
+              <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:5px;font-size:11px;color:var(--muted)">
+                ${startDate?`<span>📅 ${startDate}</span>`:''}
+                ${sipday?`<span style="color:var(--amber)">⏰ ${sipday}</span>`:''}
+                ${matDate?`<span style="color:var(--green)">🏁 Matures: ${matDate}</span>`:''}
+                ${r.addedOn&&r.addedOn!=='—'?`<span>Added: ${r.addedOn}</span>`:''}
+              </div>
+            </div>
+            <button class="ic-btn btn-sm" style="color:var(--rose);border-color:rgba(251,113,133,.2);flex-shrink:0" onclick="deleteSavingRecord(${sv.id},'${r.rid}')">✕</button>
+          </div>`;
+        }).join('')}
+
+        <!-- Add record inline -->
+        ${S.addingRecordTo===sv.id ? `
+          <div style="background:var(--bg);border-radius:12px;padding:12px;margin-top:10px;border:1px solid ${col}40">
+            <div style="font-size:11px;color:${col};font-weight:700;margin-bottom:10px">➕ New Record under "${sv.name}"</div>
+            <div class="row2">
+              <div class="field"><label>${amtLabel(cat)}</label><input type="number" id="recAmt-${sv.id}" placeholder="0"/></div>
+              <div class="field"><label>Note (optional)</label><input type="text" id="recNote-${sv.id}" placeholder="Short note"/></div>
+            </div>
+            ${renderSavingExtraFields(cat)}
+            <div class="flex-end">
+              <button class="btn btn-outline btn-sm" onclick="S.addingRecordTo=null;render()">Cancel</button>
+              <button class="btn btn-green btn-sm" onclick="addSavingRecord(${sv.id})">Add Record</button>
+            </div>
+          </div>
+        ` : `
+          <button class="btn btn-outline btn-sm btn-full" style="margin-top:10px;border-style:dashed;color:${col};border-color:${col}40" onclick="S.addingRecordTo=${sv.id};render()">
+            + Add Another Record to "${sv.name}"
+          </button>
+        `}
+      </div>
+    `}
+  </div>`;
+}
+
+function pageSavings() {
+  const ts = totalSavings();
+  const byCat = {};
+  S.savings.forEach(s=>{ const c=s.cat||s.type||'Monthly Savings'; byCat[c]=(byCat[c]||0)+Number(s.amount); });
+  const activeCat = S.addSavingCat || SAV_CATS[0];
+
+  // Group savings by category for display
+  const groups = SAV_CATS.filter(c=>S.savings.some(s=>(s.cat||s.type)===c));
+
+  return `
+  <div class="sec-hdr">
+    <div class="sec-title">Savings</div>
+    <button class="btn btn-green btn-sm" onclick="toggleAddSaving()">+ Add</button>
+  </div>
+
+  ${S.showAddSaving ? `
+  <div class="add-panel glow-green">
+    <div class="card-title" style="color:var(--green)">➕ New Savings Entry</div>
+    <div class="field"><label>Name / Label</label>
+      <input type="text" id="sName" placeholder="e.g. Emergency Fund, SBI RD, Mirae MF"/>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Category</label>
+        <select id="sCat" onchange="S.addSavingCat=this.value;render()">
+          ${SAV_CATS.map(c=>`<option value="${c}" ${c===activeCat?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field"><label>${amtLabel(activeCat)}</label>
+        <input type="number" id="sAmt" placeholder="0"/>
+      </div>
+    </div>
+    <div class="field"><label>Note (optional)</label>
+      <input type="text" id="sNote" placeholder="Short description"/>
+    </div>
+    ${renderSavingExtraFields(activeCat)}
+    <div class="flex-end">
+      <button class="btn btn-outline btn-sm" onclick="S.addSavingCat=null;toggleAddSaving()">Cancel</button>
+      <button class="btn btn-green btn-sm" onclick="addSaving()">Save Entry</button>
+    </div>
+  </div>` : ''}
+
+  <!-- Summary bar -->
+  <div class="sum-bar">
+    <div class="sum-item"><div class="sum-lbl">Total Savings</div><div class="sum-val" style="color:var(--green)">${fmt(totalSavings())}</div></div>
+    <div style="width:1px;height:40px;background:var(--border)"></div>
+    <div class="sum-item"><div class="sum-lbl">${currentMonthLabel()}</div><div class="sum-val" style="color:#34d399">${fmt(thisMonthSaved())}</div></div>
+    <div style="width:1px;height:40px;background:var(--border)"></div>
+    <div class="sum-item"><div class="sum-lbl">Savings Rate</div><div class="sum-val" style="color:var(--blue)">${savingsRate()}%<div style="font-size:9px;color:var(--muted);font-weight:500">of income</div></div></div>
+    <div style="width:1px;height:40px;background:var(--border)"></div>
+    <div class="sum-item"><div class="sum-lbl">Entries</div><div class="sum-val">${S.savings.length}</div></div>
+  </div>
+
+  <!-- Category breakdown -->
+  <div class="card">
+    <div class="card-title">📊 Breakdown by Category</div>
+    ${SAV_CATS.filter(c=>byCat[c]).map(c=>`
+      <div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-bottom:4px">
+          <span style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:16px">${savingCatIcon(c)}</span>
+            <span style="font-weight:700;color:${savingCatColor(c)}">${c}</span>
+            <span style="font-size:10px;color:var(--muted)">(${S.savings.filter(s=>(s.cat||s.type)===c).length})</span>
+          </span>
+          <span style="font-weight:800;font-family:'Nunito',sans-serif">${fmt(byCat[c])}</span>
+        </div>
+        <div class="prog-bar"><div class="prog-fill" style="width:${ts>0?(byCat[c]/ts*100).toFixed(1):0}%;background:${savingCatColor(c)}"></div></div>
+      </div>
+    `).join('')}
+  </div>
+
+  <!-- Upcoming debit dates -->
+  ${S.savings.some(s=>(s.records||[]).some(r=>r.sipday)) ? `
+  <div class="card" style="border-color:rgba(245,158,11,.25)">
+    <div class="card-title">⏰ Upcoming Monthly Debits</div>
+    ${S.savings.filter(s=>(s.records||[]).some(r=>r.sipday)).map(s=>`
+      ${(s.records||[]).filter(r=>r.sipday).map(r=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:38px;height:38px;border-radius:10px;background:${savingCatColor(s.cat||s.type)}20;display:flex;align-items:center;justify-content:center;font-size:16px">${savingCatIcon(s.cat||s.type)}</div>
+          <div>
+            <div style="font-weight:700;font-size:13px">${s.name}</div>
+            <div style="font-size:11px;color:var(--muted)">${r.note||s.cat||s.type}</div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:'Nunito',sans-serif;font-weight:800;color:var(--amber)">${fmt(r.amount)}</div>
+          <div style="font-size:11px;color:var(--muted)">Every ${r.sipday}${r.sipday==1?'st':r.sipday==2?'nd':r.sipday==3?'rd':'th'}</div>
+        </div>
+      </div>`).join('')}
+    `).join('')}
+  </div>` : ''}
+
+  <!-- Maturing soon -->
+  ${S.savings.some(s=>(s.records||[]).some(r=>r.matm&&r.maty)) ? `
+  <div class="card" style="border-color:rgba(34,211,165,.2)">
+    <div class="card-title">🏁 Maturity Dates</div>
+    ${S.savings.filter(s=>(s.records||[]).some(r=>r.matm&&r.maty)).map(s=>`
+      ${(s.records||[]).filter(r=>r.matm&&r.maty).map(r=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="font-size:20px">${savingCatIcon(s.cat||s.type)}</div>
+          <div>
+            <div style="font-weight:700;font-size:13px">${s.name}</div>
+            <div style="font-size:11px;color:var(--muted)">${r.bank||''} ${r.accno?'· '+r.accno:''}</div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:12px;color:var(--green);font-weight:700">🏁 ${r.matd||''} ${r.matm} ${r.maty}</div>
+          ${r.rate?`<div style="font-size:11px;color:var(--muted)">${r.rate}% p.a.</div>`:''}
+        </div>
+      </div>`).join('')}
+    `).join('')}
+  </div>` : ''}
+
+  <!-- All savings grouped by category -->
+  ${groups.length===0 ? `<div class="card" style="text-align:center;color:var(--muted);padding:30px">No savings entries yet. Click + Add to get started.</div>` :
+    groups.map(cat=>`
+    <div class="card">
+      <div class="card-title" style="color:${savingCatColor(cat)}">${savingCatIcon(cat)} ${cat}
+        <span style="font-size:12px;color:var(--muted);font-weight:500;margin-left:4px">${fmt(byCat[cat]||0)}/month</span>
+      </div>
+      ${S.savings.filter(s=>(s.cat||s.type)===cat).map(sv=>renderSavingCard(sv)).join('')}
+    </div>
+  `).join('')}
+
+  <!-- Monthly log -->
+  <div class="card">
+    <div class="card-title">📅 Log This Month's Total Savings</div>
+    <div class="row3">
+      <div class="field"><label>Month</label>
+        <select id="logMonth"><option value="">Month</option>${MONTHS_LIST.map(m=>`<option>${m}</option>`).join('')}</select>
+      </div>
+      <div class="field"><label>Year</label>
+        <select id="logYear"><option value="">Year</option>${Array.from({length:5},(_,i)=>`<option>${2023+i}</option>`).join('')}</select>
+      </div>
+      <div class="field"><label>Amount Saved (₹)</label>
+        <input type="number" id="logAmt" placeholder="0"/>
+      </div>
+    </div>
+    <button class="btn btn-green btn-full" onclick="addMonthLog()">Add to History</button>
+  </div>`;
+}
+
+// ════════════════════════════════════════════════════════
+// PAGE: GOALS
+// ════════════════════════════════════════════════════════
+function pageGoals() {
+  const ts = totalSavings();
+  return `
+  <div class="sec-hdr">
+    <div class="sec-title">Savings Goals</div>
+    <button class="btn btn-green btn-sm" onclick="toggleAddGoal()">+ Add</button>
+  </div>
+
+  ${S.showAddGoal ? `
+  <div class="add-panel" style="border-color:var(--purple)">
+    <div class="card-title" style="color:var(--purple)">🎯 New Goal</div>
+    <div class="field"><label>Goal Name</label><input type="text" id="gName" placeholder="e.g. Dream Home"/></div>
+    <div class="row2">
+      <div class="field"><label>Icon</label>
+        <select id="gIcon">${SAVING_ICONS.map(i=>`<option>${i}</option>`).join('')}</select>
+      </div>
+      <div class="field"><label>Priority</label>
+        <select id="gPriority">${PRIORITIES.map(p=>`<option>${p}</option>`).join('')}</select>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Target Amount (₹)</label><input type="number" id="gTarget" placeholder="0"/></div>
+      <div class="field"><label>Already Saved (₹)</label><input type="number" id="gSaved" placeholder="0"/></div>
+    </div>
+    <div class="field"><label>Target Deadline</label><input type="month" id="gDeadline"/></div>
+    <div class="flex-end">
+      <button class="btn btn-outline btn-sm" onclick="toggleAddGoal()">Cancel</button>
+      <button class="btn btn-green btn-sm" onclick="addGoal()">Save Goal</button>
+    </div>
+  </div>` : ''}
+
+  ${S.goals.map(g=>{
+    const pct = Math.min(100,Math.round(g.saved/g.target*100));
+    const remaining = g.target - g.saved;
+    const months = ts > 0 ? Math.ceil(remaining/ts) : null;
+    const date = months ? new Date(Date.now()+months*30*24*3600000).toLocaleDateString('en-IN',{month:'short',year:'numeric'}) : null;
+    const deadlineDate = g.deadline ? new Date(g.deadline+'-01').toLocaleDateString('en-IN',{month:'short',year:'numeric'}) : null;
+
+    return `
+    <div class="goal-card" style="border-top:3px solid ${g.color}">
+      <button onclick="deleteGoal(${g.id})" style="position:absolute;top:14px;right:14px;background:transparent;border:none;color:var(--muted);font-size:16px;cursor:pointer">✕</button>
+      <div class="goal-top">
+        <div>
+          <div style="font-size:22px;margin-bottom:4px">${g.icon}</div>
+          <div style="font-weight:800;font-size:17px">${g.name}</div>
+        </div>
+      </div>
+      <div class="goal-badges">
+        <span class="badge" style="background:${PRIORITY_COLORS[g.priority]}20;color:${PRIORITY_COLORS[g.priority]};border:1px solid ${PRIORITY_COLORS[g.priority]}30">${g.priority} Priority</span>
+        ${deadlineDate ? `<span class="badge" style="background:var(--card2);color:var(--muted);border:1px solid var(--border)">📅 ${deadlineDate}</span>` : ''}
+        <span class="badge" style="background:${g.color}20;color:${g.color};border:1px solid ${g.color}30">${pct}% done</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px">
+        <span style="color:var(--muted)">Saved</span>
+        <span style="color:${g.color};font-weight:800">${fmt(g.saved)} / ${fmt(g.target)}</span>
+      </div>
+      <div class="prog-bar" style="height:10px"><div class="prog-fill" style="width:${pct}%;background:linear-gradient(90deg,${g.color},${g.color}aa)"></div></div>
+      <div class="goal-stats">
+        <div class="goal-stat">
+          <div class="goal-stat-lbl">Remaining</div>
+          <div class="goal-stat-val">${fmt(remaining)}</div>
+        </div>
+        <div class="goal-stat">
+          <div class="goal-stat-lbl">Est. months</div>
+          <div class="goal-stat-val">${months || '∞'}</div>
+        </div>
+        <div class="goal-stat">
+          <div class="goal-stat-lbl">Reach by</div>
+          <div class="goal-stat-val" style="font-size:12px">${date || '—'}</div>
+        </div>
+      </div>
+      <div style="margin-top:12px">
+        <label>Update saved amount (₹)</label>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <input type="number" value="${g.saved}" id="gUpd-${g.id}" style="flex:1"/>
+          <button class="btn btn-green btn-sm" onclick="updateGoalSaved(${g.id})">Update</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('')}`;
+}
+
+// ════════════════════════════════════════════════════════
+// PAGE: INCOME
+// ════════════════════════════════════════════════════════
+function pageIncome() {
+  const ti = totalIncome();
+  const ts = totalSavings();
+
+  const now = new Date();
+  const curMonth = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][now.getMonth()];
+  const curYear = String(now.getFullYear());
+
+  // Group incomes by "Month Year" (not full date)
+  const monthGroups = {};
+  S.incomes.forEach(inc => {
+    // Extract just month+year from date string e.g. "5 Mar 2026" → "Mar 2026"
+    let key = 'No Date';
+    if(inc.date) {
+      const parts = inc.date.trim().split(' ');
+      if(parts.length === 3) key = `${parts[1]} ${parts[2]}`; // "5 Mar 2026" → "Mar 2026"
+      else if(parts.length === 2) key = inc.date;              // "Mar 2026" already
+    }
+    if(!monthGroups[key]) monthGroups[key] = [];
+    monthGroups[key].push(inc);
+  });
+
+  // Current month total
+  const currentMonthIncome = S.incomes
+    .filter(inc => inc.date && inc.date.includes(curMonth) && inc.date.includes(curYear))
+    .reduce((a, inc) => a + Number(inc.amount), 0);
+
+  // Sort months newest first
+  const sortedGroups = Object.entries(monthGroups).sort((a,b) => {
+    if(a[0]==='No Date') return 1;
+    if(b[0]==='No Date') return -1;
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const [am,ay] = a[0].split(' '); const [bm,by] = b[0].split(' ');
+    return (Number(by||0)*12 + months.indexOf(bm||'')) - (Number(ay||0)*12 + months.indexOf(am||''));
+  });
+
+  return `
+  <div class="sec-hdr">
+    <div class="sec-title">Income</div>
+    <button class="btn btn-green btn-sm" onclick="toggleAddIncome()">+ Add</button>
+  </div>
+
+  ${S.showAddIncome ? `
+  <div class="add-panel" style="border-color:var(--blue)">
+    <div class="card-title" style="color:var(--blue)">💵 New Income Entry</div>
+    <div class="field"><label>Source Name</label><input type="text" id="iName" placeholder="e.g. Salary, Freelance, Rent"/></div>
+    <div class="row2">
+      <div class="field"><label>Amount (₹)</label><input type="number" id="iAmt" placeholder="0"/></div>
+      <div class="field"><label>Frequency</label>
+        <select id="iFreq">${FREQS.map(f=>`<option>${f}</option>`).join('')}</select>
+      </div>
+    </div>
+    <div class="field"><label>📅 Income Date</label></div>
+    <div class="row3">
+      <div class="field"><label>Day</label>
+        <select id="iDay">
+          <option value="">— Day —</option>
+          ${Array.from({length:31},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field"><label>Month</label>
+        <select id="iMonth">
+          <option value="">— Month —</option>
+          ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map(m=>`<option value="${m}">${m}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field"><label>Year</label>
+        <select id="iYear">
+          <option value="">— Year —</option>
+          ${Array.from({length:6},(_,i)=>`<option value="${2023+i}">${2023+i}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="flex-end">
+      <button class="btn btn-outline btn-sm" onclick="toggleAddIncome()">Cancel</button>
+      <button class="btn btn-green btn-sm" onclick="addIncome()">Save Income</button>
+    </div>
+  </div>` : ''}
+
+  <!-- Summary bar -->
+  <div class="sum-bar">
+    <div class="sum-item">
+      <div class="sum-lbl">Total Income</div>
+      <div class="sum-val" style="color:var(--green)">${fmt(ti)}</div>
+    </div>
+    <div style="width:1px;height:40px;background:var(--border)"></div>
+    <div class="sum-item">
+      <div class="sum-lbl">${curMonth} ${curYear}</div>
+      <div class="sum-val" style="color:#34d399">${fmt(currentMonthIncome)}</div>
+    </div>
+    <div style="width:1px;height:40px;background:var(--border)"></div>
+    <div class="sum-item">
+      <div class="sum-lbl">Entries</div>
+      <div class="sum-val">${S.incomes.length}</div>
+    </div>
+    <div style="width:1px;height:40px;background:var(--border)"></div>
+    <div class="sum-item">
+      <div class="sum-lbl">Total Savings</div>
+      <div class="sum-val" style="color:var(--blue)">${fmt(ts)}</div>
+    </div>
+  </div>
+
+  <!-- Monthly income groups -->
+  ${S.incomes.length === 0 ? `
+    <div class="card" style="text-align:center;color:var(--muted);padding:30px">
+      No income entries yet. Click + Add to get started.
+    </div>
+  ` : sortedGroups.map(([monthKey, entries]) => {
+    const groupTotal = entries.reduce((a,i)=>a+Number(i.amount),0);
+    const isCurrent = monthKey.includes(curMonth) && monthKey.includes(curYear);
+    return `
+    <div class="card" style="${isCurrent?'border-color:rgba(34,211,165,.3)':''}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="card-title" style="margin-bottom:0;color:${isCurrent?'var(--green)':'var(--text)'}">${isCurrent?'📅':'🗓️'} ${monthKey}</div>
+          ${isCurrent?`<span style="font-size:10px;background:rgba(34,211,165,.15);color:var(--green);border:1px solid rgba(34,211,165,.3);border-radius:99px;padding:2px 8px;font-weight:700">Current Month</span>`:''}
+        </div>
+        <div style="font-family:'Nunito',sans-serif;font-weight:800;font-size:18px;color:${isCurrent?'var(--green)':'var(--muted2)'}">${fmt(groupTotal)}</div>
+      </div>
+      ${entries.map(inc => `
+        <div class="inc-item">
+          ${S.editingIncome === inc.id ? `
+            <div style="background:var(--card2);border-radius:14px;padding:14px;width:100%">
+              <div style="font-size:12px;color:var(--blue);font-weight:700;margin-bottom:10px">✏️ Edit Entry</div>
+              <div class="field"><label>Source Name</label><input type="text" id="eIncName-${inc.id}" value="${inc.name}"/></div>
+              <div class="row2">
+                <div class="field"><label>Amount (₹)</label><input type="number" id="eIncAmt-${inc.id}" value="${inc.amount}"/></div>
+                <div class="field"><label>Frequency</label>
+                  <select id="eIncFreq-${inc.id}">${FREQS.map(f=>`<option ${f===inc.freq?'selected':''}>${f}</option>`).join('')}</select>
+                </div>
+              </div>
+              <div class="field"><label>📅 Income Date</label></div>
+              <div class="row3">
+                <div class="field"><label>Day</label>
+                  <select id="eIncDay-${inc.id}">
+                    <option value="">— Day —</option>
+                    ${Array.from({length:31},(_,i)=>`<option value="${i+1}" ${inc.date&&inc.date.startsWith(i+1+' ')?'selected':''}>${i+1}</option>`).join('')}
+                  </select>
+                </div>
+                <div class="field"><label>Month</label>
+                  <select id="eIncMonth-${inc.id}">
+                    <option value="">— Month —</option>
+                    ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map(m=>`<option value="${m}" ${inc.date&&inc.date.includes(m)?'selected':''}>${m}</option>`).join('')}
+                  </select>
+                </div>
+                <div class="field"><label>Year</label>
+                  <select id="eIncYear-${inc.id}">
+                    <option value="">— Year —</option>
+                    ${Array.from({length:6},(_,i)=>`<option value="${2023+i}" ${inc.date&&inc.date.includes(2023+i)?'selected':''}>${2023+i}</option>`).join('')}
+                  </select>
+                </div>
+              </div>
+              <div class="flex-end">
+                <button class="btn btn-outline btn-sm" onclick="S.editingIncome=null;render()">Cancel</button>
+                <button class="btn btn-green btn-sm" onclick="saveIncome(${inc.id})">Update</button>
+              </div>
+            </div>
+          ` : `
+            <div class="inc-left">
+              <div class="inc-dot" style="background:${inc.color}"></div>
+              <div>
+                <div style="font-weight:700;font-size:14px">${inc.name}</div>
+                <div style="font-size:11px;color:var(--muted)">${inc.freq}${inc.date?' · 📅 '+inc.date:''}</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="font-family:'Nunito',sans-serif;font-weight:800;font-size:16px;color:${inc.color}">${fmt(inc.amount)}</div>
+              <button class="ic-btn" onclick="S.editingIncome=${inc.id};render()">✏️</button>
+              <button class="ic-btn" style="color:var(--rose);border-color:rgba(251,113,133,.2);font-weight:900" onclick="deleteIncome(${inc.id})">✕</button>
+            </div>
+          `}
+        </div>
+      `).join('')}
+    </div>`;
+  }).join('')}`;
+}
+
+// ════════════════════════════════════════════════════════
+// PAGE: PROJECTION
+// ════════════════════════════════════════════════════════
+function pageProjection() {
+  const ts = totalSavings();
+  let bal = 0; // cumulative savings from savings buckets
+  const data = Array.from({length: S.projMonths+1}, (_,i) => {
+    const v = { month: i===0?'Now':`M${i}`, balance: Math.round(bal) };
+    bal += ts;
+    return v;
+  });
+  const projected = data[data.length-1].balance;
+  const years = (S.projMonths/12).toFixed(1);
+
+  return `
+  <div class="sec-title" style="margin-bottom:16px">Savings Projection</div>
+
+  <div class="card glow-green">
+    <div style="font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.7px">You'll accumulate in ${S.projMonths} months</div>
+    <div style="font-family:'Nunito',sans-serif;font-size:38px;font-weight:800;color:var(--green);margin:6px 0;line-height:1">${fmt(projected)}</div>
+    <div style="font-size:13px;color:var(--muted)">Saving <strong style="color:var(--green)">${fmt(ts)}/month</strong> &nbsp;·&nbsp; Over <strong>${years} years</strong></div>
+    <hr/>
+    <label>Projection period: <strong style="color:var(--green)">${S.projMonths} months (${years} yrs)</strong></label>
+    <input type="range" min="6" max="120" step="6" value="${S.projMonths}"
+      oninput="S.projMonths=+this.value;document.getElementById('pLbl').textContent=this.value+' months ('+( this.value/12).toFixed(1)+' yrs)';rebuildProjChart()"
+      style="margin:10px 0 4px"/>
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted)">
+      <span>6 mo</span><span id="pLbl">${S.projMonths} months (${years} yrs)</span><span>10 yr</span>
+    </div>
+    <div class="chart-wrap" style="height:260px"><canvas id="projChart"></canvas></div>
+  </div>
+
+  <!-- Milestones -->
+  <div class="card">
+    <div class="card-title">🏁 Goal Milestones on Projection</div>
+    ${S.goals.map(g=>{
+      const remaining = Math.max(0, g.target - g.saved);
+      const months = ts > 0 ? Math.ceil(remaining/ts) : null;
+      const date = months ? new Date(Date.now()+months*30*24*3600000).toLocaleDateString('en-IN',{month:'long',year:'numeric'}) : null;
+      const reachable = months && months <= S.projMonths;
+      return `
+      <div class="milestone" style="border-color:${g.color}">
+        <div>
+          <div style="font-weight:800;font-size:14px">${g.icon} ${g.name}</div>
+          <div style="font-family:'Nunito',sans-serif;font-weight:800;color:${g.color};font-size:15px;margin-top:2px">${fmt(g.target)}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:3px">Remaining: ${fmt(remaining)}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:12px;color:var(--muted)">${months ? '~'+months+' mo' : 'No savings'}</div>
+          <div style="font-size:13px;font-weight:800;margin-top:3px;color:${reachable?g.color:'var(--muted)'}">${date||'—'}</div>
+          <div style="margin-top:4px">
+            <span class="badge" style="background:${reachable?'rgba(34,211,165,.15)':'rgba(251,113,133,.1)'};color:${reachable?'#22d3a5':'#fb7185'};border:1px solid ${reachable?'rgba(34,211,165,.3)':'rgba(251,113,133,.2)'}">${reachable?'✓ In range':'⚠ Beyond period'}</span>
+          </div>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>
+
+  <!-- Saving type projections -->
+  <div class="card">
+    <div class="card-title">💰 Bucket Projections (${S.projMonths} months)</div>
+    ${S.savings.map(sv=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="font-size:18px">${sv.icon}</div>
+          <div>
+            <div style="font-weight:700;font-size:13px">${sv.name}</div>
+            <div style="font-size:11px;color:var(--muted)">${fmt(sv.amount)}/month</div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:'Nunito',sans-serif;font-weight:800;color:${sv.color};font-size:15px">${fmt(sv.amount*S.projMonths)}</div>
+          <div style="font-size:10px;color:var(--muted)">in ${S.projMonths} months</div>
+        </div>
+      </div>
+    `).join('')}
+  </div>`;
+}
+
+// ════════════════════════════════════════════════════════
+// CHARTS
+// ════════════════════════════════════════════════════════
+function drawRing(id, pct, color) {
+  const c = document.getElementById(id);
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  const cx=50,cy=50,r=38;
+  ctx.clearRect(0,0,100,100);
+  ctx.beginPath(); ctx.arc(cx,cy,r,-Math.PI/2,Math.PI*2); ctx.strokeStyle='#1e2a42'; ctx.lineWidth=8; ctx.stroke();
+  if (pct>0) {
+    ctx.beginPath(); ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+(pct/100)*Math.PI*2);
+    ctx.strokeStyle=color; ctx.lineWidth=8; ctx.lineCap='round'; ctx.stroke();
+  }
+}
+
+function drawMiniChart() {
+  const c = document.getElementById('miniChart');
+  if (!c) return;
+  if (S.charts.mini) S.charts.mini.destroy();
+  S.charts.mini = new Chart(c, {
+    type:'bar',
+    data:{
+      labels: S.monthlyLog.map(m=>m.month),
+      datasets:[{
+        data: S.monthlyLog.map(m=>m.saved),
+        backgroundColor: S.monthlyLog.map((_,i)=> i===S.monthlyLog.length-1 ? '#22d3a5' : 'rgba(34,211,165,0.25)'),
+        borderRadius:8, borderSkipped:false,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>fmt(ctx.raw)},backgroundColor:'#1a2035',borderColor:'#1e2a42',borderWidth:1,titleColor:'#64748b',bodyColor:'#e2e8f0'}},
+      scales:{
+        x:{grid:{display:false},ticks:{color:'#64748b',font:{size:11}}},
+        y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#64748b',font:{size:11},callback:v=>'₹'+(v/1000).toFixed(0)+'k'}}
+      }
+    }
+  });
+}
+
+function drawProjChart() {
+  const c = document.getElementById('projChart');
+  if (!c) return;
+  if (S.charts.proj) S.charts.proj.destroy();
+  const ts = totalSavings();
+  let bal = 0;
+  const data = Array.from({length:S.projMonths+1},(_,i)=>{ const v={x:`M${i}`,y:Math.round(bal)}; bal+=ts; return v; });
+  S.charts.proj = new Chart(c, {
+    type:'line',
+    data:{
+      labels: data.map(d=>d.x),
+      datasets:[{
+        data: data.map(d=>d.y),
+        borderColor:'#22d3a5', borderWidth:2.5, fill:true,
+        backgroundColor:(ctx)=>{
+          const g=ctx.chart.ctx.createLinearGradient(0,0,0,260);
+          g.addColorStop(0,'rgba(34,211,165,0.22)'); g.addColorStop(1,'rgba(34,211,165,0)'); return g;
+        },
+        tension:0.4, pointRadius:0,
+      },
+      ...S.goals.map(g=>({
+        data: data.map(()=>g.target),
+        borderColor: g.color, borderWidth:1.5, borderDash:[5,4],
+        fill:false, pointRadius:0, label:g.name,
+      }))
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:true,labels:{color:'#64748b',font:{size:11},usePointStyle:true,pointStyleWidth:8}},
+        tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+fmt(ctx.raw)},backgroundColor:'#1a2035',borderColor:'#1e2a42',borderWidth:1,titleColor:'#64748b',bodyColor:'#e2e8f0'}
+      },
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#64748b',font:{size:11},maxTicksLimit:8}},
+        y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#64748b',font:{size:11},callback:v=>'₹'+(v/1000).toFixed(0)+'k'}}
+      }
+    }
+  });
+}
+
+function rebuildProjChart() { drawProjChart(); }
+
+// ════════════════════════════════════════════════════════
+// ACTIONS
+// ════════════════════════════════════════════════════════
+function toggleAddIncome(){ S.showAddIncome=!S.showAddIncome; render(); }
+function toggleAddSaving(){ S.showAddSaving=!S.showAddSaving; render(); }
+function toggleAddGoal(){ S.showAddGoal=!S.showAddGoal; render(); }
+
+function addIncome(){
+  const name=document.getElementById('iName').value.trim();
+  const amt=+document.getElementById('iAmt').value;
+  const freq=document.getElementById('iFreq').value;
+  const day=document.getElementById('iDay').value;
+  const month=document.getElementById('iMonth').value;
+  const year=document.getElementById('iYear').value;
+  if(!name||!amt) return alert('Please fill in the name and amount.');
+  const dateStr = (day&&month&&year) ? `${day} ${month} ${year}` : (month&&year) ? `${month} ${year}` : '';
+  S.incomes.push({id:uid(),name,amount:amt,freq,date:dateStr,color:COLORS[S.incomes.length%COLORS.length]});
+  S.showAddIncome=false; render();
+}
+function saveIncome(id){
+  const name=document.getElementById(`eIncName-${id}`).value.trim();
+  const amt=+document.getElementById(`eIncAmt-${id}`).value;
+  const freq=document.getElementById(`eIncFreq-${id}`).value;
+  const day=document.getElementById(`eIncDay-${id}`).value;
+  const month=document.getElementById(`eIncMonth-${id}`).value;
+  const year=document.getElementById(`eIncYear-${id}`).value;
+  if(!name||!amt) return alert('Please fill in the name and amount.');
+  const dateStr = (day&&month&&year) ? `${day} ${month} ${year}` : (month&&year) ? `${month} ${year}` : '';
+  S.incomes=S.incomes.map(i=>i.id===id?{...i,name,amount:amt,freq,date:dateStr}:i);
+  S.editingIncome=null; render();
+}
+function deleteIncome(id){
+  S.incomes=S.incomes.filter(i=>i.id!==id);
+  render();
+}
+
+function addSaving(){
+  const name=document.getElementById('sName').value.trim();
+  const cat=document.getElementById('sCat').value;
+  const amt=+document.getElementById('sAmt').value;
+  const note=document.getElementById('sNote').value.trim();
+  if(!name||!amt) return alert('Please fill in the name and amount.');
+  const extra = collectSavingExtra(cat);
+  const record = { rid:uid(), amount:amt, note, ...extra, addedOn: new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) };
+
+  // Check if label already exists under same category — append record to it
+  const existing = S.savings.find(s=>s.name.toLowerCase()===name.toLowerCase() && (s.cat||s.type)===cat);
+  if(existing){
+    existing.records = existing.records||[];
+    existing.records.push(record);
+    existing.amount = existing.records.reduce((a,r)=>a+Number(r.amount),0);
+  } else {
+    S.savings.push({id:uid(),name,cat,type:cat,icon:savingCatIcon(cat),color:savingCatColor(cat),records:[record],amount:amt});
+  }
+  S.showAddSaving=false; S.addSavingCat=null; render();
+}
+
+function addSavingRecord(id){
+  const amt=+document.getElementById(`recAmt-${id}`).value;
+  const note=document.getElementById(`recNote-${id}`).value.trim();
+  const cat = S.savings.find(s=>s.id===id)?.cat||'Monthly Savings';
+  if(!amt) return alert('Please enter an amount.');
+  const extra = collectSavingExtra(cat);
+  const record = { rid:uid(), amount:amt, note, ...extra, addedOn: new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) };
+  S.savings = S.savings.map(s=>{
+    if(s.id!==id) return s;
+    const records = [...(s.records||[{ rid:uid(), amount:s.amount, note:s.note||'', addedOn:'—' }]), record];
+    return {...s, records, amount: records.reduce((a,r)=>a+Number(r.amount),0)};
+  });
+  S.addingRecordTo=null; render();
+}
+
+function deleteSavingRecord(savId, rid){
+  S.savings = S.savings.map(s=>{
+    if(s.id!==savId) return s;
+    const records = (s.records||[]).filter(r=>r.rid!==rid);
+    return {...s, records, amount: records.reduce((a,r)=>a+Number(r.amount),0)};
+  });
+  // Remove whole entry if no records left
+  S.savings = S.savings.filter(s=>(s.records||[]).length>0);
+  render();
+}
+
+function saveSaving(id){
+  const name=document.getElementById(`eSvName-${id}`).value.trim();
+  const cat=document.getElementById(`eSvCat-${id}`).value;
+  const note=document.getElementById(`eSvNote-${id}`).value.trim();
+  if(!name) return alert('Please fill in the name.');
+  S.savings=S.savings.map(s=>{
+    if(s.id!==id) return s;
+    return {...s, name, cat, type:cat, icon:savingCatIcon(cat), color:savingCatColor(cat), note};
+  });
+  S.editingSaving=null; render();
+}
+function deleteSaving(id){ S.savings=S.savings.filter(s=>s.id!==id); render(); }
+
+function addGoal(){
+  const name=document.getElementById('gName').value.trim();
+  const target=+document.getElementById('gTarget').value;
+  const saved=+document.getElementById('gSaved').value||0;
+  const icon=document.getElementById('gIcon').value;
+  const priority=document.getElementById('gPriority').value;
+  const deadline=document.getElementById('gDeadline').value;
+  if(!name||!target) return alert('Fill name and target');
+  S.goals.push({id:uid(),name,target,saved,icon,priority,deadline,color:COLORS[S.goals.length%COLORS.length]});
+  S.showAddGoal=false; render();
+}
+function updateGoalSaved(id){
+  const val=+document.getElementById(`gUpd-${id}`).value;
+  S.goals=S.goals.map(g=>g.id===id?{...g,saved:val}:g);
+  render();
+}
+function deleteGoal(id){ S.goals=S.goals.filter(g=>g.id!==id); render(); }
+
+function addMonthLog(){
+  const month=document.getElementById('logMonth').value;
+  const year=document.getElementById('logYear').value;
+  const amt=+document.getElementById('logAmt').value;
+  if(!month||!amt) return alert('Please select a month and enter amount.');
+  const label = year ? `${month} ${year}` : month;
+  S.monthlyLog.push({month:label, saved:amt});
+  if(S.monthlyLog.length>12) S.monthlyLog.shift();
+  render();
+}
+
+// ════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════
+render();
+</script>
+</body>
+</html>
